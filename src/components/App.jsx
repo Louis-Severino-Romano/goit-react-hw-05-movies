@@ -9,13 +9,13 @@ export const App = () => {
   return (
     <div>
       <Routes>
-        {/* <Route path="/" element={<SharedLayout />}> */}
+        <Route path="/" element={<SharedLayout />}>
           <Route index element={<HomePage />} />
           <Route path="movies" element={<MoviesPage />}>
             <Route path=":movieId" element={<MovieDetailsPage />} />
           </Route>
-        {/* </Route> */}
-        {/* <Route path="*" element={<NotFoundPage />} /> */}
+        </Route>
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </div>
   );
