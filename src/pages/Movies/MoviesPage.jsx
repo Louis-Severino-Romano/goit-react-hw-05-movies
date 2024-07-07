@@ -1,23 +1,48 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { fetchMovieByQuery } from 'api/api';
 import { MovieList } from 'components/MovieList/MovieList';
 import { Outlet } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import css from './MoviesPage.module.css';
 
-export const MoviesPage = () => {
-  const [searchQuery, setSearchQuery] = useState('Friends');
+const MoviesPage = () => {
+  // const [searchQuery, setSearchQuery] = useState('Friends');
   const [movies, setMovies] = useState([]);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const movieName = searchParams.get('query') ?? 'Friends'; // Default search query is 'Friends'
 
-  const fetchMovies = async () => {
-    if (!searchQuery.trim()) return;
-    try {
-      const movies = await fetchMovieByQuery(searchQuery);
-      console.log('movies', movies);
-      setMovies(movies);
-    } catch (error) {
-      console.error(error);
-    }
+  const [isLoading, setIsLoading] = useState(false);
+
+  const navigate = useNavigate();
+
+  const updateQueryString = query => {
+    const nextParams = query !== '' ? { query } : {};
+    setSearchParams(nextParams);
   };
+
+  useEffect(() => {
+    const fetchMovies = async () => {
+      if (!movieName.trim()) return;
+      setIsLoading(true);
+
+      try {
+        const movies = await fetchMovieByQuery(movieName);
+
+        if (movies.length === 0) {
+          navigate('/not-found', { replace: true });
+          return;
+        }
+        console.log('movies', movies);
+        setMovies(movies);
+        setIsLoading(false);
+      } catch (error) {
+        console.error(error);
+        setIsLoading(false);
+      }
+    };
+
+    fetchMovies();
+  }, [movieName, navigate]);
 
   return (
     <div>
@@ -25,13 +50,20 @@ export const MoviesPage = () => {
         <input
           type="text"
           className={css.input}
-          onChange={e => setSearchQuery(e.target.value)}
+          onChange={e => updateQueryString(e.target.value)}
           placeholder="Search movies..."
         />
-        <button onClick={fetchMovies}>Search</button>
+        {/* Removed the button since the search updates automatically with the input */}
+        {/* <button onClick={fetchMovies}>Search</button> */}
       </div>
-      <MovieList movies={movies} />
+      {isLoading ? (
+        <p style={{ textAlign: 'center' }}>Loading...</p>
+      ) : (
+        <MovieList movies={movies} />
+      )}
       <Outlet />
     </div>
   );
 };
+
+export default MoviesPage;
